@@ -15,7 +15,9 @@ export default function Home() {
 
   const [patches, setPatches] = useState(initialPatches);
 
-  const setPatch = (x, y, url) => {
+  const [currentPatch, setCurrentPatch] = useState(null);
+
+  const setPatch = ([x, y], url) => {
     setPatches(
       patches.map((row, i) =>
         row.map((patch, j) => {
@@ -40,12 +42,42 @@ export default function Home() {
     }
   };
 
+  const pickNextPatch = () => {
+    let possibleCoordinates = [];
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        // If it's at the top or the left or it has top and left neighbors
+        if (
+          patches[i][j] === null &&
+          ((patches[i - 1] && patches[i - 1][j] && j === 0) ||
+            (i === 0 && patches[i][j - 1]) ||
+            (patches[i - 1] && patches[i - 1][j] && patches[i][j - 1]))
+        ) {
+          possibleCoordinates.push([i, j]);
+        }
+      }
+    }
+
+    if (possibleCoordinates.length === 0) {
+      return [0, 0];
+    }
+
+    // Randomly select an item from possibleCoordinates
+    return possibleCoordinates[
+      Math.floor(Math.random() * possibleCoordinates.length)
+    ];
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    let currentPatch = pickNextPatch();
+    setCurrentPatch(currentPatch);
+    console.log("currentPatch", currentPatch);
+
     // setPatch(
-    //   3,
-    //   7,
+    //   [3, 7],
     //   "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png"
     // );
 
@@ -56,6 +88,10 @@ export default function Home() {
       },
       body: JSON.stringify({
         prompt: e.target.prompt.value,
+        neighborTop:
+          patches[currentPatch[0] - 1] &&
+          patches[currentPatch[0] - 1][currentPatch[1]],
+        neighborLeft: patches[currentPatch[0]][currentPatch[1] - 1],
       }),
     });
     let prediction = await response.json();
@@ -80,14 +116,14 @@ export default function Home() {
 
       console.log({ prediction });
     }
-    setNextPatch(prediction.output[prediction.output.length - 1]);
+    setPatch(currentPatch, prediction.output);
     setPrediction(null);
   };
 
   return (
     <div className="">
       <Head>
-        <title>Replicate + Next.js</title>
+        <title>Patchwork</title>
       </Head>
 
       <div
