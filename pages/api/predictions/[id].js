@@ -1,9 +1,15 @@
+import * as Bytescale from "@bytescale/sdk";
+import nodeFetch from "node-fetch";
 import Replicate from "replicate";
 const axios = require('axios');
 const { createCanvas, loadImage } = require('canvas');
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
+});
+const uploadManager = new Bytescale.UploadManager({
+  fetchApi: nodeFetch,
+  apiKey: process.env.BYTESCALE_API_KEY,
 });
 
 export default async function handler(req, res) {
@@ -40,8 +46,14 @@ async function cropBottomRight(imageUrl) {
   // Draw the image onto the canvas starting at the calculated coordinates
   ctx.drawImage(img, x, y, 768, 768, 0, 0, 768, 768);
 
-  // Convert to PNG data URL or any other format you need
-  const croppedDataUrl = canvas.toDataURL('image/png');
+  const buffer = canvas.toBuffer("image/png");
 
-  return croppedDataUrl;
+  const { fileUrl, filePath } = await uploadManager
+    .upload({
+      data: buffer,
+      mime: "image/png",
+      originalFileName: "output.png"
+    });
+
+  return fileUrl;
 }
