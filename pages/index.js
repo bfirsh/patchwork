@@ -1,6 +1,6 @@
-import { useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
+import { useState } from "react";
 import Spinner from "../components/spinner";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -10,6 +10,8 @@ for (let i = 0; i < 10; i++) {
   initialPatches[i] = new Array(10).fill(null);
 }
 
+let curPatch;
+
 export default function Home() {
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
@@ -17,6 +19,8 @@ export default function Home() {
   const [patches, setPatches] = useState(initialPatches);
 
   const [currentPatch, setCurrentPatch] = useState(null);
+
+  const [lastPrompt, setLastPrompt] = useState(null);
 
   const setPatch = ([x, y], url) => {
     setPatches(
@@ -70,17 +74,24 @@ export default function Home() {
     ];
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, redo = false) => {
     e.preventDefault();
 
-    let currentPatch = pickNextPatch();
-    setCurrentPatch(currentPatch);
-    console.log("currentPatch", currentPatch);
+    if (!redo) {
+      curPatch = pickNextPatch();
+    } else {
+      setPatch(curPatch, null);
+    }
+    setCurrentPatch(curPatch);
+    console.log("currentPatch", curPatch);
 
     // setPatch(
     //   [3, 7],
     //   "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png"
     // );
+
+    let promptValue = redo ? lastPrompt : e.target.prompt.value;
+    setLastPrompt(promptValue);
 
     const response = await fetch("/api/predictions", {
       method: "POST",
@@ -88,11 +99,11 @@ export default function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt: e.target.prompt.value,
+        prompt: promptValue,
         neighborTop:
-          patches[currentPatch[0] - 1] &&
-          patches[currentPatch[0] - 1][currentPatch[1]],
-        neighborLeft: patches[currentPatch[0]][currentPatch[1] - 1],
+          patches[curPatch[0] - 1] &&
+          patches[curPatch[0] - 1][curPatch[1]],
+        neighborLeft: patches[curPatch[0]][curPatch[1] - 1],
       }),
     });
     let prediction = await response.json();
@@ -117,8 +128,14 @@ export default function Home() {
 
       console.log({ prediction });
     }
-    setPatch(currentPatch, prediction.output);
+    setPatch(curPatch, prediction.output);
     setPrediction(null);
+  };
+
+  const handleRedo = (e) => {
+    if (lastPrompt) {
+      handleSubmit(e, true);
+    }
   };
 
   return (
@@ -174,6 +191,16 @@ export default function Home() {
           disabled={prediction ? true : false}
         >
           {prediction ? prediction.status : "Go!"}
+        </button>
+
+        {/* Redo button */}
+        <button
+          className="button ml-2"
+          type="button"
+          onClick={handleRedo}
+          disabled={!lastPrompt || prediction ? true : false}
+        >
+          Redo
         </button>
         {error && <div>{error}</div>}
       </form>
