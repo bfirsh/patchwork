@@ -4,12 +4,40 @@ import Image from "next/image";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+let initialPatches = new Array(10);
+for (let i = 0; i < 10; i++) {
+  initialPatches[i] = new Array(10).fill(null);
+}
+
 export default function Home() {
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
 
+  const [patches, setPatches] = useState(initialPatches);
+
+  const setPatch = (x, y, url) => {
+    setPatches(
+      patches.map((row, i) =>
+        row.map((patch, j) => {
+          if (i === x && j === y) {
+            return url;
+          } else {
+            return patch;
+          }
+        })
+      )
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setPatch(
+      3,
+      7,
+      "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png"
+    );
+    return;
     const response = await fetch("/api/predictions", {
       method: "POST",
       headers: {
@@ -42,15 +70,6 @@ export default function Home() {
     }
   };
 
-  let patches = new Array(10);
-
-  for (let i = 0; i < 10; i++) {
-    patches[i] = new Array(10).fill(null);
-  }
-
-  patches[0][0] =
-    "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png";
-
   return (
     <div className="">
       <Head>
@@ -60,23 +79,23 @@ export default function Home() {
       <div
         className="grid"
         style={{
-          gridTemplateRows: "repeat(10, minmax(0, 1fr))",
-          gridTemplateColumns: "repeat(10, minmax(0, 1fr))",
+          gridTemplateRows: "repeat(10, 1fr)",
+          gridTemplateColumns: "repeat(10, 1fr)",
         }}
       >
         {patches.map((row, i) =>
           row.map((patch, j) => {
             return patch ? (
-              <img src={patch} className="" alt="" />
+              <img src={patch} className="aspect-square" alt="" />
             ) : (
-              <div className="border-right border-r border-b border-slate-200"></div>
+              <div className="border-right border-r border-b border-slate-200 aspect-square "></div>
             );
           })
         )}
       </div>
 
       <form
-        className="absolute bottom-0 w-full p-4 flex bg-slate-100"
+        className="fixed bottom-0 w-full p-4 flex bg-slate-100"
         onSubmit={handleSubmit}
       >
         <input
