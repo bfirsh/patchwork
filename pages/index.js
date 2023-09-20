@@ -86,9 +86,12 @@ export default function Home() {
         {patches.map((row, i) =>
           row.map((patch, j) => {
             return patch ? (
-              <img src={patch} className="aspect-square" alt="" />
+              <img key={i + j} src={patch} className="aspect-square" alt="" />
             ) : (
-              <div className="border-right border-r border-b border-slate-200 aspect-square "></div>
+              <div
+                key={i + j}
+                className="border-right border-r border-b border-slate-200 aspect-square "
+              ></div>
             );
           })
         )}
