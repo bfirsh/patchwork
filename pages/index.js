@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
+import Spinner from "../components/spinner";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -141,7 +142,17 @@ export default function Home() {
               <div
                 key={i + j}
                 className="border-right border-r border-b border-slate-200 aspect-square "
-              ></div>
+              >
+                {currentPatch &&
+                  i === currentPatch[0] &&
+                  j === currentPatch[1] && (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="w-16 h-16">
+                        <Spinner />
+                      </div>
+                    </div>
+                  )}
+              </div>
             );
           })
         )}
