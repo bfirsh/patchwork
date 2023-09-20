@@ -75,19 +75,15 @@ export default function Home() {
         )}
       </div>
 
-      {/* <h1 className="py-6 text-center font-bold text-2xl">
-        Dream something with{" "}
-        <a href="https://replicate.com/stability-ai/sdxl?utm_source=project&utm_project=getting-started">
-          SDXL
-        </a>
-      </h1>
-
-      <form className="w-full flex" onSubmit={handleSubmit}>
+      <form
+        className="absolute bottom-0 w-full p-4 flex bg-slate-100"
+        onSubmit={handleSubmit}
+      >
         <input
           type="text"
           className="flex-grow"
           name="prompt"
-          placeholder="Enter a prompt to display an image"
+          placeholder="Enter a prompt to add a patch"
         />
         <button className="button" type="submit">
           Go!
@@ -110,7 +106,7 @@ export default function Home() {
           )}
           <p className="py-3 text-sm opacity-50">status: {prediction.status}</p>
         </>
-      )} */}
+      )}
     </div>
   );
 }
