@@ -29,15 +29,26 @@ export default function Home() {
     );
   };
 
+  const setNextPatch = (url) => {
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; i++) {
+        if (patches[i][j] === null) {
+          setPatch(i, j, url);
+          return;
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setPatch(
-      3,
-      7,
-      "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png"
-    );
-    return;
+    // setPatch(
+    //   3,
+    //   7,
+    //   "https://replicate.delivery/pbxt/E6Ftpfi0dF1SOi4b6ltUwsfdxUf7zTQSfdhmJfRcfGTdZ88UE/out-0.png"
+    // );
+
     const response = await fetch("/api/predictions", {
       method: "POST",
       headers: {
@@ -58,16 +69,19 @@ export default function Home() {
       prediction.status !== "succeeded" &&
       prediction.status !== "failed"
     ) {
-      await sleep(1000);
+      await sleep(250);
       const response = await fetch("/api/predictions/" + prediction.id);
       prediction = await response.json();
       if (response.status !== 200) {
         setError(prediction.detail);
+        setPrediction(null);
         return;
       }
+
       console.log({ prediction });
-      setPrediction(prediction);
     }
+    setNextPatch(prediction.output[prediction.output.length - 1]);
+    setPrediction(null);
   };
 
   return (
@@ -107,28 +121,15 @@ export default function Home() {
           name="prompt"
           placeholder="Enter a prompt to add a patch"
         />
-        <button className="button" type="submit">
-          Go!
+        <button
+          className="button"
+          type="submit"
+          disabled={prediction ? true : false}
+        >
+          {prediction ? prediction.status : "Go!"}
         </button>
+        {error && <div>{error}</div>}
       </form>
-
-      {error && <div>{error}</div>}
-
-      {prediction && (
-        <>
-          {prediction.output && (
-            <div className="image-wrapper mt-5">
-              <Image
-                fill
-                src={prediction.output[prediction.output.length - 1]}
-                alt="output"
-                sizes="100vw"
-              />
-            </div>
-          )}
-          <p className="py-3 text-sm opacity-50">status: {prediction.status}</p>
-        </>
-      )}
     </div>
   );
 }
